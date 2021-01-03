@@ -35,11 +35,11 @@ def KNN(X_train, y_train, X_valid, y_valid):
 #1) Feed the original dataset without any dimensionality reduction as input to k-NN.
 
 from sklearn.model_selection import train_test_split
-y =data[data.columns[-1,]]
-#print(y.values)
+y =data[data.columns[-1]]
+print(y.values)
 
-X = data.drop(data[data.columns[-1]], axis=1, inplace=False)
-#print(X)
+X = data.drop(data.columns[-1], axis=1, inplace=False)
+print(X.tail)
 
 X_train, X_valid, y_train, y_valid = train_test_split(X.values,y.values, test_size=0.5, random_state=42)
 
@@ -85,29 +85,41 @@ KNN(train_X, y_train, valid_X, y_valid)
 
 # Feature Selection: Use forward selection to reduce dimensionality to m using k-NN as predictor. Train the model for each m between 1 and 57.
 
-from sklearn.feature_selection import SequentialFeatureSelector as SFS
-#from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from sklearn.pipeline import Pipeline
+import time
+
 
 knn = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
 feature_names = X.columns
 best_acc = 0
-
+print("# Feature Selection: Use forward selection to reduce dimensionality to m using k-NN as predictor.")
+X_train, X_valid, y_train, y_valid = train_test_split(X,y, test_size=0.5, random_state=42)
 for m in range(1,57):
-    sfs = SFS(knn, n_features_to_select=m)
-    sfs.fit(X, y)
-    # these are the selected features
-    feat_cols = feature_names[sfs.get_support().tolist()]
+    sfs1 = SFS(knn,
+               k_features=m,
+               forward=True,
+               floating=False,
+               scoring='accuracy',
+               n_jobs=-1)
     # now we can work with our selected features
     #.fit(X_train.iloc[:, feat_cols], y_train)
-
-    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.5, random_state=42)
-    print(X_train.shape)
-    print(X_train.iloc[:,feat_cols])
-    print(y_train.shape)
-    #acc = KNN(X_train[feat_cols], y_train, X_valid[feat_cols], y_valid)
+    print("m = " + "{:f}".format(m))
+    pipe = Pipeline([('sfs1', sfs1),
+                          ('KNN', knn)])
+    start = time.time()
+    pipe.fit(X_train, y_train)
+    stop = time.time()
+    print(f"Training time: {stop - start}s")
+    print(sfs1.k_feature_idx_)
+    start = time.time()
+    acc = pipe.score(X_valid, y_valid)
+    stop = time.time()
+    print(f"Valid time: {stop - start}s")
+    print(acc)
     if acc > best_acc:
         best_acc = acc
-        feat_cols = feat_cols
+        feat_cols = pipe.named_steps['sfs1'].k_feature_names_
 
 print("Our best accuracy = " + "{:f}".format(best_acc))
 print("Features selected by forward sequential selection was: "
