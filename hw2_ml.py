@@ -10,6 +10,8 @@ data = pd.read_csv('data/dataset.txt', na_values=missing_values, header=None)
 #print(data.tail)
 
 from sklearn.neighbors import KNeighborsClassifier
+import array
+
 cm=[]
 recall = 0
 precision = 0
@@ -21,6 +23,12 @@ from sklearn.metrics import precision_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import recall_score
 from sklearn.metrics import accuracy_score
+
+def clear_lists():
+    precisions.clear()
+    recalls.clear()
+    accs.clear()
+    feat_count.clear()
 
 
 #use 5 nearest neighbor (k = 5) and Euclidean distance to implement k-NN classifier.
@@ -86,6 +94,7 @@ best_acc = 0
 best_m = 0
 print(
     "Feature extraction: Use PCA to reduce dimensionality to m, followed by k-NN. Try for different values of m corresponding to proportion of variance of 0.80, 0.81, 0.82, ...., 0.99")
+clear_lists()
 for m in list(range_ay):
     train_X,valid_X = pca(m)
     print("Reduced to m =" + '{:f}'.format(m))
@@ -103,16 +112,20 @@ print("Feature Count " + "{:f}".format(feat_c))
 #%%
 # 2) Plot the accuracy, precision, and recall of 'PCA+k-NN' and 'forward selection with k-NN' versus m (i.e. number of features in the reduced subset).
 fig, ax = plt.subplots(figsize=(6,6))
+
 ax.plot(feat_count, recalls, label='Recall')
 ax.plot(feat_count, accs, label='Precision')
 ax.plot(feat_count, precisions, label='accuracy')
 ax.set_xlabel('Feature Count')
 ax.set_ylabel('Value')
 ax.legend(loc='center left')
-#ax.clf()
 fig.show()
+f_1 = feat_count
+r_1 = recalls
+p_1 = precisions
+a_1 = accs
 #%% plot the data for m=2.
-
+clear_lists()
 train_X, valid_X = pca(2)
 KNN(train_X, y_train, valid_X, y_valid)
 print(precision)
@@ -137,10 +150,6 @@ feature_names = X.columns
 best_acc = 0
 print("# Feature Selection: Use forward selection to reduce dimensionality to m using k-NN as predictor.")
 X_train, X_valid, y_train, y_valid = train_test_split(X,y, test_size=0.5, random_state=42)
-precisions = []
-recalls = []
-accs = []
-feat_count = []
 #PLEASE BE AWARE THAT CODE RUNS ON ALL AVAILABLE CPU (N_JOBS = -1)
 def sfs_knn(m):
     global precision
@@ -176,8 +185,8 @@ def sfs_knn(m):
     col = pipe.named_steps['sfs1'].k_feature_names_
     feat_count.append(X_valid.shape[1])
     return col, acc
-
-for m in range(1,57):
+clear_lists()
+for m in range(1,58):
     col, acc = sfs_knn(m)
     if acc > best_acc:
         best_acc = acc
@@ -195,15 +204,18 @@ ax2.set_xlabel('Feature Count')
 ax2.set_ylabel('Value')
 ax2.legend(loc='center left')
 fig2.show()
-
+r_2=recalls
+p_2= precisions
+a_2 = accs
+f_2 = feat_count
 
 #%% plot the data for m=2.
+clear_lists()
 X_train = X_train.values
 y_train = y_train.values
 X_valid = X_valid.values
 acc = sfs_knn(2)
-# print(precision)
-# print(recall)
+
 sfs1.fit(X_train, y_train)
 x_train_r = sfs1.transform(X_train)
 X_valid_r = sfs1.transform(X_valid)
@@ -215,3 +227,19 @@ ax3.set_xlabel('X')
 ax3.set_ylabel('Y')
 ax3.set_title('Forward Selection KNN')
 plt.show()
+
+#%% merged
+fig_m, axm = plt.subplots(figsize=(6,6))
+#feat_count= np.asarray(feat_count)
+
+axm.plot(f_1, r_1, label='Recall_PCA')
+axm.plot(f_1, a_1, label='Precision_PCA')
+axm.plot(f_1, p_1, label='accuracy_PCA')
+axm.plot(f_2, r_2, label='Recall_SFS')
+axm.plot(f_2, a_2, label='Precision_SFS')
+axm.plot(f_2, p_2, label='accuracy_SFS')
+
+axm.set_xlabel('Feature Count')
+axm.set_ylabel('Value')
+axm.legend(loc='center left')
+fig.show()
