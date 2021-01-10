@@ -150,6 +150,7 @@ feature_names = X.columns
 best_acc = 0
 print("# Feature Selection: Use forward selection to reduce dimensionality to m using k-NN as predictor.")
 X_train, X_valid, y_train, y_valid = train_test_split(X,y, test_size=0.5, random_state=42)
+clear_lists()
 #PLEASE BE AWARE THAT CODE RUNS ON ALL AVAILABLE CPU (N_JOBS = -1)
 def sfs_knn(m):
     global precision
@@ -183,9 +184,9 @@ def sfs_knn(m):
     precision = precision_score(y_valid, cc)
     precisions.append(precision)
     col = pipe.named_steps['sfs1'].k_feature_names_
-    feat_count.append(X_valid.shape[1])
+    feat_count.append(m)
     return col, acc
-clear_lists()
+
 for m in range(1,58):
     col, acc = sfs_knn(m)
     if acc > best_acc:
