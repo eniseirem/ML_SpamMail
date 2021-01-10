@@ -17,6 +17,11 @@ precisions = []
 recalls = []
 accs = []
 feat_count = []
+from sklearn.metrics import precision_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import recall_score
+from sklearn.metrics import accuracy_score
+
 
 #use 5 nearest neighbor (k = 5) and Euclidean distance to implement k-NN classifier.
 def KNN(X_train, y_train, X_valid, y_valid):
@@ -28,17 +33,13 @@ def KNN(X_train, y_train, X_valid, y_valid):
     result = knn.predict(X_valid)
    # print("KNN Results")
    # print(result)
-    from sklearn.metrics import confusion_matrix
     cm = confusion_matrix(y_valid,result)
     print("Confusion matrix")
     print(cm)
-    from sklearn.metrics import recall_score
     recall = recall_score(y_valid, result)
     recalls.append(recall)
-    from sklearn.metrics import precision_score
     precision = precision_score(y_valid, result)
     precisions.append(precision)
-    from sklearn.metrics import accuracy_score
     accuracy = accuracy_score(y_valid, result)
     accs.append(accuracy)
     feat_count.append(X_valid.shape[1])
@@ -165,11 +166,13 @@ def sfs_knn(m):
     stop = time.time()
     print(f"Valid time: {stop - start}s")
     print(acc)
-    from sklearn.metrics import recall_score
+    accs.append(acc)
     recall = recall_score(y_valid, cc)
-    from sklearn.metrics import precision_score
+    recalls.append(recall)
     precision = precision_score(y_valid, cc)
+    precisions.append(precision)
     col = pipe.named_steps['sfs1'].k_feature_names_
+    feat_count.append(X_valid.shape[1])
     return col, acc
 
 for m in range(1,57):
